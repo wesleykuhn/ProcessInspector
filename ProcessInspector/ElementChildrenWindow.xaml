@@ -1,0 +1,60 @@
+﻿<Window
+    x:Class="ProcessInspector.ElementChildrenWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:ProcessInspector"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="ElementChildrenWindow"
+    Width="800"
+    Height="450"
+    mc:Ignorable="d">
+
+    <Grid DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Label
+            Grid.Row="0"
+            Margin="5,5,5,15"
+            Content="{Binding CurElementDesc}" />
+
+        <ListView
+            Grid.Row="1"
+            Margin="5"
+            ItemsSource="{Binding ElementChildren}"
+            SelectedItem="{Binding SelectedChildElement}"
+            MouseDoubleClick="ElementChildrenListView_DoubleClicked">
+            <ListView.View>
+                <GridView AllowsColumnReorder="true" ColumnHeaderToolTip="Process Inspection">
+                    <GridViewColumn
+                        Width="Auto"
+                        DisplayMemberBinding="{Binding Path=Current.AutomationId}"
+                        Header="Automation ID" />
+                    <GridViewColumn
+                        Width="Auto"
+                        DisplayMemberBinding="{Binding Path=Current.Name}"
+                        Header="Name" />
+                    <GridViewColumn
+                        Width="Auto"
+                        DisplayMemberBinding="{Binding Path=Current.ClassName}"
+                        Header="Class Name" />
+                    <GridViewColumn
+                        Width="Auto"
+                        DisplayMemberBinding="{Binding Path=Current.ItemStatus}"
+                        Header="Status" />
+                    <GridViewColumn
+                        Width="Auto"
+                        DisplayMemberBinding="{Binding Path=Current.ControlType.ProgrammaticName}"
+                        Header="Control Type" />
+                    <GridViewColumn
+                        Width="Auto"
+                        DisplayMemberBinding="{Binding Path=Current.ProcessId}"
+                        Header="Process ID" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</Window>
