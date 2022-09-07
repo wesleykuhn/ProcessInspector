@@ -2,6 +2,8 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -86,13 +88,13 @@ namespace ProcessInspector
         protected override void OnActivated(EventArgs e)
         {
             base.OnActivated(e);
-
+            //UIAutomation.SendMessageToCalculator();
             RefreshComboBox();
         }
 
         private void RefreshComboBox()
         {
-            var processes = Process.GetProcesses();
+            var processes = Process.GetProcesses().OrderBy(ob => ob.ProcessName);
 
             Processes = new ObservableCollection<Process>(processes);
         }
@@ -107,13 +109,33 @@ namespace ProcessInspector
             if (SelectedProcess is null)
                 return;
 
-            if (SelectedProcess.MainWindowHandle == IntPtr.Zero)
+            var hwnd = SelectedProcess.MainWindowHandle != IntPtr.Zero ?
+                SelectedProcess.MainWindowHandle :
+                SelectedProcess.Handle;
+
+            if (hwnd == IntPtr.Zero)
             {
                 MessageBox.Show("Sadly, there was an error while trying to get the handler of the process!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            var root = AutomationElement.FromHandle(SelectedProcess.MainWindowHandle);
+            AutomationElement root = null;
+            try
+            {
+                root = AutomationElement.FromHandle(hwnd);
+            }
+            catch (ElementNotAvailableException)
+            {
+                hwnd = UIAutomation.FindWindow(null, "Calculadora");
+                root = AutomationElement.FromHandle(hwnd);
+            }
+
+            if (root is null)
+            {
+                MessageBox.Show("Sadly, There's an error while trying to get the AutomationElement of the process!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             var elements = root.FindAll(TreeScope.Descendants, Condition.TrueCondition).Cast<AutomationElement>().ToArray();
             ProcessHwndChildren = new ObservableCollection<AutomationElement>(elements);
         }
