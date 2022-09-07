@@ -1,21 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Xml.Linq;
+using System.Windows.Threading;
 using Condition = System.Windows.Automation.Condition;
 
 namespace ProcessInspector
@@ -65,9 +56,31 @@ namespace ProcessInspector
             set => SetValue(SelectedElementPatternsProperty, value);
         }
 
+        public static DependencyProperty CurMousePosProperty =
+            DependencyProperty.Register(nameof(CurMousePos), typeof(string), typeof(MainWindow), new PropertyMetadata("N/A"));
+        public string CurMousePos
+        {
+            get => (string)GetValue(CurMousePosProperty);
+            set => SetValue(CurMousePosProperty, value);
+        }
+
+        public static DependencyProperty DetectedElementProperty =
+            DependencyProperty.Register(nameof(DetectedElement), typeof(AutomationElement), typeof(MainWindow));
+        public AutomationElement DetectedElement
+        {
+            get => (AutomationElement)GetValue(DetectedElementProperty);
+            set => SetValue(DetectedElementProperty, value);
+        }
+
+        private readonly DispatcherTimer _dispatcherTimer;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            _dispatcherTimer = new DispatcherTimer();
+            _dispatcherTimer.Tick += new EventHandler(DoDetection);
+            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);
         }
 
         protected override void OnActivated(EventArgs e)
@@ -82,47 +95,6 @@ namespace ProcessInspector
             var processes = Process.GetProcesses();
 
             Processes = new ObservableCollection<Process>(processes);
-        }
-
-        private async Task Start()
-        {
-            //await Task.Delay(1000);
-
-            //var processes = Process.GetProcessesByName("mspaint");
-            //var hWnd = processes.FirstOrDefault().MainWindowHandle;
-
-            //var root = AutomationElement.FromHandle(hWnd);
-            //var elements = root.FindAll(TreeScope.Descendants, Condition.TrueCondition)
-            //            .Cast<AutomationElement>();
-
-            //foreach (var element in elements)
-            //{
-            //    txbLogs.Dispatcher.Invoke(() =>
-            //            txbLogs.Text += $"Name: {element.Current.Name} - " +
-            //            $"ClassName: {element.Current.ClassName} - " +
-            //            $"CtrlName: {element.Current.ControlType.ProgrammaticName}\n");
-
-            //    if (element.Current.ClassName.Contains("Windows.UI.Input"))
-            //    {
-            //        //element.TryGetCurrentPattern(InvokePattern.Pattern, out var pattern);
-            //        var patterns = element.GetSupportedPatterns();
-
-            //        foreach (var pattern in patterns)
-            //        {
-            //            txbLogs.Dispatcher.Invoke(() =>
-            //                txbLogs.Text += $"Supported patterns: {pattern.ProgrammaticName}\n");
-            //        }
-            //    }
-            //    //var elementHWnd = new IntPtr(element.Current.NativeWindowHandle);
-
-            //    //txbLogs.Dispatcher.Invoke(() =>
-            //    //    txbLogs.Text += $"Name: {element.Current.Name} - " +
-            //    //    $"ClassName: {element.Current.ClassName} - " +
-            //    //    $"CtrlName: {element.Current.ControlType.ProgrammaticName} - " +
-            //    //    $"Hanlder: {elementHWnd}\n");
-            //}
-
-            //txbLogs.Dispatcher.Invoke(() => txbLogs.Text += "\nFINISHED!");
         }
 
         private void RefreshButton_Clicked(object sender, RoutedEventArgs e)
@@ -172,6 +144,39 @@ namespace ProcessInspector
 
             foreach (var pattern in patterns)
                 SelectedElementPatterns += pattern.ProgrammaticName + " | ";
+        }
+
+        private void StartButton_Clicked(object sender, RoutedEventArgs e)
+        {
+            _dispatcherTimer.Start();
+        }
+
+        private void DoDetection(object sender, EventArgs e)
+        {
+            var curPos = System.Windows.Forms.Cursor.Position;
+
+            CurMousePos = $"{curPos.X}, {curPos.Y}";
+            DetectedElement = AutomationElement.FromPoint(new Point(curPos.X, curPos.Y));
+
+            SelectedElementPatterns = string.Empty;
+
+            if (DetectedElement is null)
+                return;
+
+            var patterns = DetectedElement.GetSupportedPatterns();
+            if (patterns is null || !patterns.Any())
+            {
+                SelectedElementPatterns += "None!";
+                return;
+            }
+
+            foreach (var pattern in patterns)
+                SelectedElementPatterns += pattern.ProgrammaticName + " | ";
+        }
+
+        private void StopButton_Clicked(object sender, RoutedEventArgs e)
+        {
+            _dispatcherTimer.Stop();
         }
     }
 }
