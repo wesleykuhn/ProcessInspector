@@ -156,7 +156,15 @@ namespace ProcessInspector
             var curPos = System.Windows.Forms.Cursor.Position;
 
             CurMousePos = $"{curPos.X}, {curPos.Y}";
-            DetectedElement = AutomationElement.FromPoint(new Point(curPos.X, curPos.Y));
+            
+            try
+            {
+                DetectedElement = AutomationElement.FromPoint(new Point(curPos.X, curPos.Y));
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                return;
+            }
 
             SelectedElementPatterns = string.Empty;
 
