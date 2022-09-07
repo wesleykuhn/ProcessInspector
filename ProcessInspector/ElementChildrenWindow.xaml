@@ -14,6 +14,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Label
@@ -26,7 +27,8 @@
             Margin="5"
             ItemsSource="{Binding ElementChildren}"
             SelectedItem="{Binding SelectedChildElement}"
-            MouseDoubleClick="ElementChildrenListView_DoubleClicked">
+            MouseDoubleClick="ElementChildrenListView_DoubleClicked"
+            SelectionChanged="ElementChildrenListView_SelectionChanged">
             <ListView.View>
                 <GridView AllowsColumnReorder="true" ColumnHeaderToolTip="Process Inspection">
                     <GridViewColumn
@@ -56,5 +58,12 @@
                 </GridView>
             </ListView.View>
         </ListView>
+
+        <ScrollViewer
+                Grid.Row="2"
+                Margin="0,5,0,0"
+                HorizontalScrollBarVisibility="Auto">
+            <Label Content="{Binding SelectedChildElementPatterns}" />
+        </ScrollViewer>
     </Grid>
 </Window>

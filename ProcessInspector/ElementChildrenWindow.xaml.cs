@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Automation;
 using System.Xml.Linq;
@@ -31,11 +32,19 @@ namespace ProcessInspector
         }
 
         public static DependencyProperty SelectedChildElementProperty =
-            DependencyProperty.Register(nameof(SelectedChildElement), typeof(AutomationElement), typeof(MainWindow));
+            DependencyProperty.Register(nameof(SelectedChildElement), typeof(AutomationElement), typeof(ElementChildrenWindow));
         public AutomationElement SelectedChildElement
         {
             get => (AutomationElement)GetValue(SelectedChildElementProperty);
             set => SetValue(SelectedChildElementProperty, value);
+        }
+
+        public static DependencyProperty SelectedChildElementPatternsProperty =
+            DependencyProperty.Register(nameof(SelectedChildElementPatterns), typeof(string), typeof(ElementChildrenWindow), new PropertyMetadata("Element Patterns: None!"));
+        public string SelectedChildElementPatterns
+        {
+            get => (string)GetValue(SelectedChildElementPatternsProperty);
+            set => SetValue(SelectedChildElementPatternsProperty, value);
         }
 
         private readonly AutomationElement _element;
@@ -76,6 +85,25 @@ namespace ProcessInspector
 
             var ecw = new ElementChildrenWindow(SelectedChildElement);
             ecw.Show();
+        }
+
+        private void ElementChildrenListView_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (SelectedChildElement is null)
+                return;
+
+            SelectedChildElementPatterns = "Element Patterns: ";
+
+            var patterns = SelectedChildElement.GetSupportedPatterns();
+
+            if (patterns is null || !patterns.Any())
+            {
+                SelectedChildElementPatterns += "None!";
+                return;
+            }
+
+            foreach (var pattern in patterns)
+                SelectedChildElementPatterns += pattern.ProgrammaticName + " | ";
         }
     }
 }

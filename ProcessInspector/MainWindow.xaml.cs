@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 using Condition = System.Windows.Automation.Condition;
 
 namespace ProcessInspector
@@ -55,7 +56,15 @@ namespace ProcessInspector
             get => (AutomationElement)GetValue(SelectedElementProperty);
             set => SetValue(SelectedElementProperty, value);
         }
-        
+
+        public static DependencyProperty SelectedElementPatternsProperty =
+            DependencyProperty.Register(nameof(SelectedElementPatterns), typeof(string), typeof(MainWindow), new PropertyMetadata("Element Patterns: None!"));
+        public string SelectedElementPatterns
+        {
+            get => (string)GetValue(SelectedElementPatternsProperty);
+            set => SetValue(SelectedElementPatternsProperty, value);
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -144,6 +153,25 @@ namespace ProcessInspector
 
             var ecw = new ElementChildrenWindow(SelectedElement);
             ecw.Show();
+        }
+
+        private void ElementsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SelectedElement is null)
+                return;
+
+            SelectedElementPatterns = "Element Patterns: ";
+
+            var patterns = SelectedElement.GetSupportedPatterns();
+
+            if (patterns is null || !patterns.Any())
+            {
+                SelectedElementPatterns += "None!";
+                return;
+            }
+
+            foreach (var pattern in patterns)
+                SelectedElementPatterns += pattern.ProgrammaticName + " | ";
         }
     }
 }
