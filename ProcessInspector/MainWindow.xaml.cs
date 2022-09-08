@@ -160,7 +160,7 @@ namespace ProcessInspector
             ProcessHwndChildren = new ObservableCollection<AutomationElement>(elements);
 
             //DEBUG
-            UIAutomation.SendMessageToCalculator(root);
+            //UIAutomation.SendMessageToCalculator(root);
         }
 
         private void ElementsListView_DoubleClicked(object sender, MouseButtonEventArgs e)
@@ -201,10 +201,14 @@ namespace ProcessInspector
             var curPos = System.Windows.Forms.Cursor.Position;
 
             CurMousePos = $"{curPos.X}, {curPos.Y}";
-            
+
             try
             {
                 DetectedElement = AutomationElement.FromPoint(new Point(curPos.X, curPos.Y));
+            }
+            catch (OverflowException)
+            {
+                return;
             }
             catch (System.ComponentModel.Win32Exception)
             {
