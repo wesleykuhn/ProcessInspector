@@ -36,34 +36,93 @@ namespace ProcessInspector
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern int SendMessage(IntPtr hWnd, int msg, int wParam, IntPtr lParam);
 
-        public static void SendMessageToCalculator()
+        public static void SendMessageToCalculator(AutomationElement root)
         {
-            Process process = null;
-            AutomationElement root = null;
-            while (root is null)
-            {
-                try
-                {
-                    process = Process.GetProcessesByName("CalculatorApp").FirstOrDefault();
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+            InvokeButtonByName(root, "Um");
+            InvokeButtonByName(root, "Mais");
+        }
 
-                    if (process is null)
-                        throw new ElementNotAvailableException();
-
-                    root = AutomationElement.FromHandle(process.Handle);
-                }
-                catch (System.Windows.Automation.ElementNotAvailableException)
-                {
-                    process = Process.GetProcessesByName("CalculatorApp").FirstOrDefault();
-                    Thread.Sleep(500);
-                }
-            }
-
-            //Condition conditions = new AndCondition(
-            //    new PropertyCondition(AutomationElement.IsEnabledProperty, true),
-            //    new PropertyCondition(AutomationElement.AutomationIdProperty, "num4button"),
-            //    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button));
-
-            var btn = root.FindFirst(TreeScope.Subtree, new PropertyCondition(AutomationElement.NameProperty, "Quatro"));
+        private static void InvokeButtonByName(AutomationElement root, string buttonName)
+        {
+            var btn = root.FindFirst(TreeScope.Subtree, new PropertyCondition(AutomationElement.NameProperty, buttonName));
             var success = btn.TryGetCurrentPattern(InvokePattern.Pattern, out var pattern);
 
             if (success)

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,6 +20,8 @@ namespace ProcessInspector
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const string ProcessNamingFile = "process_dict.txt";
+
         public static DependencyProperty ProcessesProperty =
                 DependencyProperty.Register(nameof(Processes), typeof(ObservableCollection<Process>), typeof(MainWindow));
         public ObservableCollection<Process> Processes
@@ -109,9 +113,20 @@ namespace ProcessInspector
             if (SelectedProcess is null)
                 return;
 
-            var hwnd = SelectedProcess.MainWindowHandle != IntPtr.Zero ?
-                SelectedProcess.MainWindowHandle :
-                SelectedProcess.Handle;
+            IntPtr hwnd;
+
+            try
+            {
+                hwnd = SelectedProcess.MainWindowHandle != IntPtr.Zero ?
+                    SelectedProcess.MainWindowHandle :
+                    SelectedProcess.Handle;
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                MessageBox.Show("That process cannot be selected because is protected by Windows!", "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                SelectedProcess = null;
+                return;
+            }
 
             if (hwnd == IntPtr.Zero)
             {
@@ -126,8 +141,7 @@ namespace ProcessInspector
             }
             catch (ElementNotAvailableException)
             {
-                hwnd = UIAutomation.FindWindow(null, "Calculadora");
-                root = AutomationElement.FromHandle(hwnd);
+                TryGetAutomationElementFromWindowName(out root);
             }
 
             if (root is null)
@@ -137,7 +151,16 @@ namespace ProcessInspector
             }
 
             var elements = root.FindAll(TreeScope.Descendants, Condition.TrueCondition).Cast<AutomationElement>().ToArray();
+            if (elements is null || !elements.Any())
+            {
+                TryGetAutomationElementFromWindowName(out root);
+                elements = root.FindAll(TreeScope.Descendants, Condition.TrueCondition).Cast<AutomationElement>().ToArray();
+            }
+
             ProcessHwndChildren = new ObservableCollection<AutomationElement>(elements);
+
+            //DEBUG
+            UIAutomation.SendMessageToCalculator(root);
         }
 
         private void ElementsListView_DoubleClicked(object sender, MouseButtonEventArgs e)
@@ -207,6 +230,50 @@ namespace ProcessInspector
         private void StopButton_Clicked(object sender, RoutedEventArgs e)
         {
             _dispatcherTimer.Stop();
+        }
+
+        private bool TryGetAutomationElementFromWindowName(out AutomationElement element)
+        {
+            var hwnd = IntPtr.Zero;
+            if (!string.IsNullOrEmpty(SelectedProcess.MainWindowTitle))
+            {
+                hwnd = UIAutomation.FindWindow(null, SelectedProcess.MainWindowTitle);
+            }
+            else if (File.Exists(AppContext.BaseDirectory + ProcessNamingFile))
+            {
+                var windowName = GetWindowNameFromProcessDictFile(SelectedProcess.ProcessName);
+                hwnd = UIAutomation.FindWindow(null, windowName);
+            }
+
+            try
+            {
+                element = AutomationElement.FromHandle(hwnd);
+
+                if (element is null)
+                    return false;
+                else
+                    return true;
+            }
+            catch (ElementNotAvailableException)
+            {
+                element = null;
+                return false;
+            }
+        }
+
+        private string GetWindowNameFromProcessDictFile(string processName)
+        {
+            Dictionary<string, string> readed = new Dictionary<string, string>();
+            //using(var sr = new StreamReader(AppContext.BaseDirectory + ProcessNamingFile))
+            var lines = File.ReadLines(AppContext.BaseDirectory + ProcessNamingFile);
+
+            foreach (var line in lines)
+            {
+                var keyValue = line.Split('=');
+                readed.Add(keyValue[0], keyValue[1]);
+            }
+
+            return readed.Where(w => w.Key == processName).Select(s => s.Value).FirstOrDefault();
         }
     }
 }
